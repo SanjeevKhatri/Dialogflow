@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 
 function App() {
-  const [message, setMessage] = useState('');
+    const [data, setData] = useState(null);
 
-  useEffect(() => {
-    fetch('/api/greeting')
-        .then((response) => response.json())
-        .then((data) => setMessage(data.message));
-  }, []);
+    useEffect(() => {
+        // fetch('http://localhost:8000/api/greeting')
+        fetch('https://dialogflow-4rev.onrender.com/api/greeting')
+            .then(response => response.json())
+            .then(data => setData(data));
+    }, []);
 
-  return (
-      <div>
-        <h1>{message}</h1>
-      </div>
-  );
+    return (
+        <div>
+            <h1>React and Python Integration</h1>
+            {data && <p>{data.message}</p>}
+        </div>
+    );
 }
 
 export default App;

@@ -1,0 +1,45 @@
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+    mode: 'development',
+    entry: './src/index.js', // Adjust the path if your entry point is different
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        clean: true, // Clean the output directory before each build
+    },
+    devServer: {
+        static: path.resolve(__dirname, 'dist'), // Serve content from the 'dist' directory
+        port: 3000, // Set the port to 3000
+        hot: true, // Enable Hot Module Replacement
+        open: true, // Open the browser after server has been started
+    },
+    module: {
+        rules: [
+            {
+                test: /\.(js|jsx)$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            ['@babel/preset-env', { modules: false }],
+                            '@babel/preset-react',
+                        ],
+                    },
+                },
+            },
+            // Add other loaders as needed
+        ],
+    },
+    resolve: {
+        extensions: ['.js', '.jsx'],
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: './dist/index.html', // Ensure this path points to your HTML template
+        }),
+        // Add other plugins as needed
+    ],
+};
