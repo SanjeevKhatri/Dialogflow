@@ -3,7 +3,8 @@ from flask_cors import CORS
 import os
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000"])  # Allow React app's origin
+# CORS(app, origins=["http://localhost:3000"])  # Allow React app's origin
+CORS(app, origins=["https://dialogflow-ui.onrender.com/"])  # Allow React app's origin
 
 @app.route('/api/greeting')
 def greeting():
