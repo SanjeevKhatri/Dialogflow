@@ -10,7 +10,7 @@ module.exports = {
         clean: true, // Clean the output directory before each build
     },
     devServer: {
-        static: path.resolve(__dirname, 'build'), // Serve content from the 'dist' directory
+        static: path.resolve(__dirname, 'build'), // Serve content from the 'build' directory
         port: 3000, // Set the port to 3000
         hot: true, // Enable Hot Module Replacement
         open: true, // Open the browser after server has been started
@@ -38,7 +38,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './build/index.html', // Ensure this path points to your HTML template
+            template: './public/index.html', // Ensure this path points to your HTML template
         }),
         // Add other plugins as needed
     ],
