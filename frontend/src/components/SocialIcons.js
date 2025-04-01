@@ -26,19 +26,19 @@ const SocialIcons = () => {
 
   return (
     <IconsContainer>
-      <IconLink isDarkTheme={isDarkTheme} href="#" aria-label="LinkedIn">
+      <IconLink isDarkTheme={isDarkTheme} href="https://www.linkedin.com/in/sanjeevkhatri29" aria-label="LinkedIn">
         <FaLinkedin />
       </IconLink>
-      <IconLink isDarkTheme={isDarkTheme} href="#" aria-label="Facebook">
+      <IconLink isDarkTheme={isDarkTheme} href="https://www.facebook.com/Pestilenc3" aria-label="Facebook">
         <FaFacebook />
       </IconLink>
-      <IconLink isDarkTheme={isDarkTheme} href="#" aria-label="Twitter">
+      <IconLink isDarkTheme={isDarkTheme} href="https://twitter.com/Mr_Sanzeev" aria-label="Twitter">
         <FaTwitter />
       </IconLink>
-      <IconLink isDarkTheme={isDarkTheme} href="#" aria-label="Instagram">
+      <IconLink isDarkTheme={isDarkTheme} href="https://www.instagram.com/sanzeev_official" aria-label="Instagram">
         <FaInstagram />
       </IconLink>
-      <IconLink isDarkTheme={isDarkTheme} href="#" aria-label="Email">
+      <IconLink isDarkTheme={isDarkTheme} href="mailto:sanjeevkhatri29@gmail.com?Subject=From%20sanjeevkhatri.com.np" aria-label="Email">
         <FaEnvelope />
       </IconLink>
     </IconsContainer>

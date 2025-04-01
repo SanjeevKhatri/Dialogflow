@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const ButtonContainer = styled(motion.button)`
   position: fixed;
+  z-index: 1;
   bottom: 30px;
   right: 30px;
   background-color: ${({ isDarkTheme }) => isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
@@ -45,7 +46,7 @@ const ChatButton = () => {
         onClick={() => setIsModalOpen(true)}
       >
         <FaComment />
-        Ask about me
+        Chat with Virtual Me
       </ButtonContainer>
 
       <AnimatePresence>
