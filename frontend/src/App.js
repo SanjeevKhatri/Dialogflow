@@ -1,21 +1,48 @@
-import React, { useEffect, useState } from 'react';
+// App.js
+import React from 'react';
+import styled from 'styled-components';
+import GlobalStyles from './GlobalStyles';
+import BackgroundAnimation from './components/BackgroundAnimation';
+import ProfileSection from './components/ProfileSection';
+import SocialIcons from './components/SocialIcons';
+import ChatButton from './components/ChatButton';
+import Navbar from './components/Navbar';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import ThemeTransition from './components/ThemeTransition';
+
+const MainContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+`;
+
+const AppContent = () => {
+  const { isDarkTheme } = useTheme();
+
+  return (
+    <>
+      <GlobalStyles isDarkTheme={isDarkTheme} />
+      <ThemeTransition />
+      <BackgroundAnimation />
+      <Navbar />
+      <MainContainer>
+        <ProfileSection />
+        <SocialIcons />
+      </MainContainer>
+      <ChatButton />
+    </>
+  );
+};
 
 function App() {
-    const [data, setData] = useState(null);
-
-    useEffect(() => {
-        // fetch('http://localhost:8000/api/greeting')
-        fetch('https://dialogflow-4rev.onrender.com/api/greeting')
-            .then(response => response.json())
-            .then(data => setData(data));
-    }, []);
-
-    return (
-        <div>
-            <h1>React and Python Integration</h1>
-            {data && <p>{data.message}</p>}
-        </div>
-    );
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
 }
 
 export default App;
