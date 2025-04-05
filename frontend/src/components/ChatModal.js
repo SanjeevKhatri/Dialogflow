@@ -195,7 +195,10 @@ const ChatModal = ({ onClose }) => {
     const sendMessage = async () => {
         if (inputValue.trim() === '') return;
 
-        // Add user message
+        // Log user message
+        console.log(`User message: "${inputValue}"`);
+
+        // Add user message to the chat
         const userMessage = { id: Date.now(), text: inputValue, isUser: true };
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
@@ -205,7 +208,10 @@ const ChatModal = ({ onClose }) => {
         const sessionId = generateSessionId();
 
         try {
-            // Call the Python API with error handling
+            // Log the request being sent
+            console.log(`Sending request to backend with sessionId: ${sessionId}`);
+
+            // Call the Python API
             const response = await fetch('https://sanjeevkhatri.com/api/dialogflow', {
             // const response = await fetch('http://localhost:8000/api/dialogflow', {
                 method: 'POST',
@@ -218,11 +224,16 @@ const ChatModal = ({ onClose }) => {
                 }),
             });
 
+            // Check if the response is successful
             if (!response.ok) {
                 throw new Error(`Network response error: ${response.status}`);
             }
 
+            // Parse the response
             const data = await response.json();
+
+            // Log the response from the backend
+            console.log('Bot response:', data.response);
 
             // Add bot response after a short delay to feel more natural
             setTimeout(() => {
@@ -235,9 +246,11 @@ const ChatModal = ({ onClose }) => {
             }, 500);
 
         } catch (error) {
+            // Log errors
             console.error('Error:', error);
             setIsTyping(false);
             setError(error.message);
+
             setMessages(prev => [...prev, {
                 id: Date.now(),
                 text: `Sorry, I'm having trouble connecting to my services right now. (Error: ${error.message})`,
