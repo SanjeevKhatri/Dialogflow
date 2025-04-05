@@ -1,10 +1,10 @@
-// src/components/ChatModal.js
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { FaTimes, FaPaperPlane } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 
+// Styled components
 const ModalOverlay = styled(motion.div)`
     position: fixed;
     top: 0;
@@ -12,7 +12,7 @@ const ModalOverlay = styled(motion.div)`
     width: 100%;
     height: 100%;
     background-color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)'};
+    isDarkTheme ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)'};
     display: flex;
     justify-content: center;
     align-items: center;
@@ -26,11 +26,11 @@ const ModalContainer = styled(motion.div)`
     width: 350px;
     height: 450px;
     background-color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-component-bg)' : 'var(--light-component-bg)'};
+    isDarkTheme ? 'var(--dark-component-bg)' : 'var(--light-component-bg)'};
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 10px 30px ${({ isDarkTheme }) =>
-            isDarkTheme ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)'};
+    isDarkTheme ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.2)'};
     display: flex;
     flex-direction: column;
     z-index: 101;
@@ -38,7 +38,7 @@ const ModalContainer = styled(motion.div)`
 
 const ModalHeader = styled.div`
     background-color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
+    isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
     color: ${({ isDarkTheme }) => isDarkTheme ? '#121212' : '#ffffff'};
     padding: 15px;
     display: flex;
@@ -62,7 +62,7 @@ const ModalContent = styled.div`
     padding: 20px;
     overflow-y: auto;
     color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)'};
+    isDarkTheme ? 'var(--dark-text-secondary)' : 'var(--light-text-secondary)'};
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -70,7 +70,7 @@ const ModalContent = styled.div`
 
 const ModalFooter = styled.div`
     border-top: 1px solid ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-border)' : 'var(--light-border)'};
+    isDarkTheme ? 'var(--dark-border)' : 'var(--light-border)'};
     padding: 15px;
     display: flex;
 `;
@@ -81,21 +81,21 @@ const InputField = styled.input`
     border-radius: 50px;
     border: none;
     background-color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-input-bg)' : 'var(--light-input-bg)'};
+    isDarkTheme ? 'var(--dark-input-bg)' : 'var(--light-input-bg)'};
     color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-text)' : 'var(--light-text)'};
+    isDarkTheme ? 'var(--dark-text)' : 'var(--light-text)'};
     outline: none;
 
     &:focus {
         box-shadow: 0 0 0 2px ${({ isDarkTheme }) =>
-                isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
+    isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
     }
 `;
 
 const SendButton = styled.button`
     margin-left: 10px;
     background-color: ${({ isDarkTheme }) =>
-            isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
+    isDarkTheme ? 'var(--dark-accent)' : 'var(--light-accent)'};
     color: ${({ isDarkTheme }) => isDarkTheme ? '#121212' : '#ffffff'};
     border: none;
     border-radius: 50px;
@@ -157,6 +157,7 @@ const ChatModal = ({ onClose }) => {
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -182,6 +183,15 @@ const ChatModal = ({ onClose }) => {
         setInputValue(e.target.value);
     };
 
+    const generateSessionId = () => {
+        if (!sessionStorage.getItem('chatSessionId')) {
+            const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            sessionStorage.setItem('chatSessionId', sessionId);
+            return sessionId;
+        }
+        return sessionStorage.getItem('chatSessionId');
+    };
+
     const sendMessage = async () => {
         if (inputValue.trim() === '') return;
 
@@ -190,22 +200,25 @@ const ChatModal = ({ onClose }) => {
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
         setIsTyping(true);
+        setError(null);
+
+        const sessionId = generateSessionId();
 
         try {
-            // Call the Python API
-            const response = await fetch('/api/dialogflow', {
+            // Call the Python API with error handling
+            const response = await fetch('http://localhost:8000/api/dialogflow', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: inputValue,
-                    session_id: sessionStorage.getItem('chatSessionId') || generateSessionId()
+                    message: userMessage.text,
+                    session_id: sessionId
                 }),
             });
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`Network response error: ${response.status}`);
             }
 
             const data = await response.json();
@@ -223,18 +236,13 @@ const ChatModal = ({ onClose }) => {
         } catch (error) {
             console.error('Error:', error);
             setIsTyping(false);
+            setError(error.message);
             setMessages(prev => [...prev, {
                 id: Date.now(),
-                text: "Sorry, I'm having trouble connecting to my services right now. Please try again later.",
+                text: `Sorry, I'm having trouble connecting to my services right now. (Error: ${error.message})`,
                 isUser: false
             }]);
         }
-    };
-
-    const generateSessionId = () => {
-        const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        sessionStorage.setItem('chatSessionId', sessionId);
-        return sessionId;
     };
 
     const handleKeyPress = (e) => {
@@ -260,7 +268,7 @@ const ChatModal = ({ onClose }) => {
                 onClick={(e) => e.stopPropagation()}
             >
                 <ModalHeader isDarkTheme={isDarkTheme}>
-                    <h3>Chat with Sanjeev</h3>
+                    <h3>Chat with Virtual Sanjeev</h3>
                     <CloseButton isDarkTheme={isDarkTheme} onClick={onClose}>
                         <FaTimes />
                     </CloseButton>
