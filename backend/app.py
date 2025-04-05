@@ -125,5 +125,6 @@ def test():
     return jsonify({"status": "ok", "message": "API is running"})
 
 if __name__ == "__main__":
-    logging.info(f"Starting Flask app on port 8000 with project ID: {DIALOGFLOW_PROJECT_ID}")
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    port = int(os.environ.get("PORT", 8000))
+    logging.info(f"Starting Flask app on port {port} with project ID: {DIALOGFLOW_PROJECT_ID}")
+    app.run(host='0.0.0.0', port=port, debug=False)
