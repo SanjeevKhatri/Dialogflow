@@ -1,14 +1,30 @@
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from google.cloud import dialogflow_v2 as dialogflow
 import json
 from dotenv import load_dotenv
 
-# Set up logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+# Create logs directory if it doesn't exist
+logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
+# Set up logging with rotation
+log_file = os.path.join(logs_dir, 'app.log')
+file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)  # 10MB per file, keep 5 backups
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+# Configure root logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+
+# Also log to console for development
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(console_handler)
 
 # Load environment variables
 load_dotenv()
