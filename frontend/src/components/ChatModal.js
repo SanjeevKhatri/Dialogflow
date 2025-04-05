@@ -206,7 +206,8 @@ const ChatModal = ({ onClose }) => {
 
         try {
             // Call the Python API with error handling
-            const response = await fetch('http://localhost:8000/api/dialogflow', {
+            const response = await fetch('https://sanjeevkhatri.com/api/dialogflow', {
+            // const response = await fetch('http://localhost:8000/api/dialogflow', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
