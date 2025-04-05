@@ -6,33 +6,45 @@ from google.cloud import dialogflow_v2 as dialogflow
 import json
 from dotenv import load_dotenv
 
-# Load and parse the JSON string
-load_dotenv()
-json_str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-creds_dict = json.loads(json_str)
-
-# Optional: write to temp file if a file path is needed
-with open("dialogflow_credentials.json", "w") as f:
-    f.write(json_str)
-
 # Set up logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-app = Flask(__name__)
-# CORS(app, origins=["http://localhost:3000"])
-CORS(app, origins=["https://sanjeevkhatri.com"])
-# CORS(app, origins=['https://sanjeevkhatri.com.np', 'https://sanjeevkhatri.com', 'http://localhost:3000'])
+# Load environment variables
+load_dotenv()
 
-# Set Google credentials path
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./dialogflow_credentials.json"
+# Load and parse the JSON string from environment variable
+json_str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+
+try:
+    # Verify we have valid JSON credentials
+    if not json_str:
+        logging.error("GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable not set")
+        raise ValueError("Missing credentials")
+
+    creds_dict = json.loads(json_str)
+
+    # Write credentials to temp file
+    with open("dialogflow_credentials.json", "w") as f:
+        f.write(json_str)
+
+    # Set Google credentials path
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./dialogflow_credentials.json"
+    logging.info("Successfully loaded and set credentials")
+except Exception as e:
+    logging.error(f"Error loading credentials: {e}")
+    raise
+
+app = Flask(__name__)
+# Configure CORS - make sure this matches your frontend domain exactly
+CORS(app, origins=["https://sanjeevkhatri.com", "http://localhost:3000"], supports_credentials=True)
 
 # Dialogflow project ID
-DIALOGFLOW_PROJECT_ID = "test-ikwf"  # Verify this ID is correct
+DIALOGFLOW_PROJECT_ID = "test-ikwf"  # Your project ID
 DIALOGFLOW_LANGUAGE_CODE = "en"
 
 def detect_intent_texts(session_id, text, language_code=DIALOGFLOW_LANGUAGE_CODE):
-    """Returns the result of detect intent with texts as inputs. Using the same `session_id` between requests allows continuation of the conversation."""
+    """Returns the result of detect intent with texts as inputs."""
     try:
         session_client = dialogflow.SessionsClient()
         session_path = session_client.session_path(DIALOGFLOW_PROJECT_ID, session_id)
@@ -61,27 +73,34 @@ def detect_intent_texts(session_id, text, language_code=DIALOGFLOW_LANGUAGE_CODE
 
 @app.route("/api/dialogflow", methods=["POST"])
 def chat():
-    data = request.json
-    session_id = data.get("session_id", "default-session")
-    user_message = data.get("message", "")
-
-    # Log the incoming request data
-    logging.info(f"Received message: '{user_message}' for session: {session_id}")
-
-    if not user_message:
-        return jsonify({"response": "I didn't understand that."})
-
     try:
+        # Verify we have valid JSON data
+        if not request.is_json:
+            logging.error("Invalid request: Not JSON")
+            return jsonify({"response": "Invalid request format"}), 400
+
+        data = request.json
+        session_id = data.get("session_id", "default-session")
+        user_message = data.get("message", "")
+
+        # Log the incoming request data
+        logging.info(f"Received message: '{user_message}' for session: {session_id}")
+
+        if not user_message:
+            return jsonify({"response": "I didn't understand that."})
+
         # Get the bot's response from Dialogflow
         bot_response = detect_intent_texts(session_id, user_message)
 
         # Log the response from the bot
         logging.info(f"Bot response: {bot_response}")
 
+        # Make sure we're returning a valid JSON response
         return jsonify({"response": bot_response if bot_response else "I'm not sure how to respond to that."})
     except Exception as e:
         # Log any error that occurred during processing
         logging.error(f"Error processing request: {e}")
+        # Return a proper JSON response even on error
         return jsonify({"response": f"Sorry, I encountered an error: {str(e)}"}), 500
 
 @app.route("/api/test", methods=["GET"])

@@ -211,7 +211,7 @@ const ChatModal = ({ onClose }) => {
             // Log the request being sent
             console.log(`Sending request to backend with sessionId: ${sessionId}`);
 
-            // Call the Python API
+            // Call the API with improved error handling
             const response = await fetch('https://sanjeevkhatri.com/api/dialogflow', {
             // const response = await fetch('http://localhost:8000/api/dialogflow', {
                 method: 'POST',
@@ -224,13 +224,29 @@ const ChatModal = ({ onClose }) => {
                 }),
             });
 
-            // Check if the response is successful
+            // Check response status first
             if (!response.ok) {
-                throw new Error(`Network response error: ${response.status}`);
+                const errorText = await response.text(); // Get raw error response
+                console.error(`Error response (${response.status}): ${errorText}`);
+                throw new Error(`Server error: ${response.status}`);
             }
 
-            // Parse the response
-            const data = await response.json();
+            // Get the response text first to check if it's valid
+            const responseText = await response.text();
+            if (!responseText) {
+                throw new Error('Empty response from server');
+            }
+
+            console.log('Raw response:', responseText);
+
+            // Try to parse as JSON
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (jsonError) {
+                console.error('JSON parsing error:', jsonError);
+                throw new Error('Invalid JSON response from server');
+            }
 
             // Log the response from the backend
             console.log('Bot response:', data.response);
@@ -247,7 +263,7 @@ const ChatModal = ({ onClose }) => {
 
         } catch (error) {
             // Log errors
-            console.error('Error:', error);
+            console.error('Error in communication with server:', error);
             setIsTyping(false);
             setError(error.message);
 
