@@ -16,7 +16,7 @@ with open("dialogflow_credentials.json", "w") as f:
 
 app = Flask(__name__)
 # CORS(app, origins=["http://localhost:3000"])
-CORS(app, origins='https://sanjeevkhatri.com.np')
+CORS(app, origins=['https://sanjeevkhatri.com.np', 'https://sanjeevkhatri.com', 'http://localhost:3000'])
 
 # Set Google credentials path
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./dialogflow_credentials.json"
