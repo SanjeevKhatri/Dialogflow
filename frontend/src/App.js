@@ -1,12 +1,14 @@
 // App.js
 import React from 'react';
 import styled from 'styled-components';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'; // Changed to HashRouter
 import GlobalStyles from './GlobalStyles';
 import BackgroundAnimation from './components/BackgroundAnimation';
 import ProfileSection from './components/ProfileSection';
 import SocialIcons from './components/SocialIcons';
 import ChatButton from './components/ChatButton';
-import ChatPrompt from './components/ChatPrompt'; // Import the ChatPrompt component
+import ChatPrompt from './components/ChatPrompt';
+import ChatHistory from './components/ChatHistory';
 import Navbar from './components/Navbar';
 import FooterSection from './components/FooterSection';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -27,6 +29,19 @@ const MainContainer = styled.div`
   padding: 20px;
 `;
 
+// Home component for the main page content
+const Home = () => {
+  return (
+    <>
+      <MainContainer>
+        <ProfileSection />
+        <SocialIcons />
+      </MainContainer>
+      <ChatButton />
+    </>
+  );
+};
+
 const AppContent = () => {
   const { isDarkTheme } = useTheme();
 
@@ -36,13 +51,14 @@ const AppContent = () => {
       <ThemeTransition />
       <BackgroundAnimation />
       <PageContainer>
-        <Navbar />
-        <MainContainer>
-          <ProfileSection />
-          <SocialIcons />
-        </MainContainer>
-        <ChatButton />
-        <FooterSection />
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/chat-history" element={<ChatHistory />} />
+          </Routes>
+          <FooterSection />
+        </Router>
       </PageContainer>
     </>
   );
