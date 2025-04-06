@@ -36,32 +36,37 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chat_data.db
 
 def init_db():
     """Initialize the database and create tables if they don't exist"""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    try:
+        logging.info(f"Initializing database at {DB_PATH}")
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
 
-    # Create chat_sessions table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS chat_sessions (
-        session_id TEXT PRIMARY KEY,
-        created_at TEXT NOT NULL
-    )
-    ''')
+        # Create chat_sessions table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            session_id TEXT PRIMARY KEY,
+            created_at TEXT NOT NULL
+        )
+        ''')
 
-    # Create chat_messages table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id TEXT NOT NULL,
-        message TEXT NOT NULL,
-        response TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
-        FOREIGN KEY (session_id) REFERENCES chat_sessions (session_id)
-    )
-    ''')
+        # Create chat_messages table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            message TEXT NOT NULL,
+            response TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES chat_sessions (session_id)
+        )
+        ''')
 
-    conn.commit()
-    conn.close()
-    logging.info("Database initialized successfully")
+        conn.commit()
+        conn.close()
+        logging.info("Database initialized successfully")
+    except Exception as e:
+        logging.error(f"Database initialization error: {e}")
+        raise
 
 # Load and parse the JSON string from environment variable
 json_str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
@@ -84,6 +89,9 @@ try:
 except Exception as e:
     logging.error(f"Error loading credentials: {e}")
     raise
+
+# Initialize the database early - this ensures it runs in all environments
+init_db()
 
 app = Flask(__name__)
 # Configure CORS - make sure this matches your frontend domain exactly
@@ -186,8 +194,15 @@ def chat():
 def get_chat_history():
     """Endpoint to retrieve chat history"""
     try:
+        logging.info("Chat history endpoint called")
         session_id = request.args.get("session_id")
         limit = request.args.get("limit", 100, type=int)
+
+        # Log database path to verify it exists
+        logging.info(f"Looking for database at: {DB_PATH}")
+        if not os.path.exists(DB_PATH):
+            logging.error(f"Database file not found at {DB_PATH}")
+            return jsonify({"success": False, "error": "Database file not found"}), 500
 
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row  # This enables column access by name
@@ -195,6 +210,7 @@ def get_chat_history():
 
         if session_id:
             # Get history for a specific session
+            logging.info(f"Retrieving history for session: {session_id}")
             cursor.execute("""
                 SELECT message, response, timestamp
                 FROM chat_messages
@@ -203,6 +219,7 @@ def get_chat_history():
             """, (session_id, limit))
         else:
             # Get all chat history, grouped by session
+            logging.info("Retrieving all chat sessions")
             cursor.execute("""
                 SELECT cm.session_id, cs.created_at,
                        COUNT(cm.id) as message_count,
@@ -214,6 +231,7 @@ def get_chat_history():
             """)
 
         results = [dict(row) for row in cursor.fetchall()]
+        logging.info(f"Found {len(results)} results")
         conn.close()
 
         return jsonify({"success": True, "data": results})
@@ -270,10 +288,38 @@ def test():
     """Simple endpoint to test if API is working"""
     return jsonify({"status": "ok", "message": "API is running"})
 
-if __name__ == "__main__":
-    # Initialize the database before starting the app
-    init_db()
+# Add a health check endpoint that includes database status
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    """Health check endpoint that verifies database access"""
+    try:
+        # Check if database file exists
+        db_exists = os.path.exists(DB_PATH)
 
+        # Try a simple query to verify database is working
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [table[0] for table in cursor.fetchall()]
+        conn.close()
+
+        return jsonify({
+            "status": "healthy",
+            "database": {
+                "exists": db_exists,
+                "path": DB_PATH,
+                "tables": tables
+            }
+        })
+    except Exception as e:
+        logging.error(f"Health check failed: {e}")
+        return jsonify({
+            "status": "unhealthy",
+            "error": str(e),
+            "database_path": DB_PATH
+        }), 500
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     logging.info(f"Starting Flask app on port {port} with project ID: {DIALOGFLOW_PROJECT_ID}")
     app.run(host='0.0.0.0', port=port, debug=False)
