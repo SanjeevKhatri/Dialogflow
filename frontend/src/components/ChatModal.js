@@ -212,7 +212,7 @@ const ChatModal = ({ onClose }) => {
             console.log(`Sending request to backend with sessionId: ${sessionId}`);
 
             // Call the API with improved error handling
-            const response = await fetch('https://sanjeevkhatri.com/api/dialogflow', {
+            const response = await fetch('https://dialogflow-4rev.onrender.com/api/dialogflow', {
             // const response = await fetch('http://localhost:8000/api/dialogflow', {
                 method: 'POST',
                 headers: {

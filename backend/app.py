@@ -53,7 +53,7 @@ except Exception as e:
 
 app = Flask(__name__)
 # Configure CORS - make sure this matches your frontend domain exactly
-CORS(app, origins=["https://sanjeevkhatri.com", "http://localhost:3000"], supports_credentials=True)
+CORS(app, origins=["https://sanjeevkhatri.com", "http://localhost:3000", "https://dialogflow-4rev.onrender.com"], supports_credentials=True)
 
 # Dialogflow project ID
 DIALOGFLOW_PROJECT_ID = "test-ikwf"  # Your project ID
